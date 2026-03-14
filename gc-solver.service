@@ -1,0 +1,15 @@
+[Unit]
+Description=GC Solver — Geocaching Mystery Cache Raetsel-Loeser
+After=network.target
+
+[Service]
+Type=simple
+User=claude-agent
+WorkingDirectory=/home/claude-agent/gc-solver
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8095
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

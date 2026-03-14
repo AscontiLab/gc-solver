@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block content %}
+<div x-data="resultPage()" class="fade-in">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gold-400 gold-glow">{{ solve.cache_name or solve.gc_code }}</h1>
+            <div class="flex items-center gap-3 mt-1 text-sm text-gray-400">
+                <span class="font-mono text-gold-400/80">{{ solve.gc_code }}</span>
+                {% if solve.cache_type %}<span>{{ solve.cache_type }}</span>{% endif %}
+                {% if solve.difficulty %}<span>D{{ solve.difficulty }}/T{{ solve.terrain }}</span>{% endif %}
+                {% if solve.owner %}<span>von {{ solve.owner }}</span>{% endif %}
+            </div>
+        </div>
+        {% if cached %}
+        <span class="text-xs bg-gold-400/20 text-gold-400 px-3 py-1 rounded-full">Cached</span>
+        {% endif %}
+    </div>
+
+    <!-- Zwei-Spalten Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Links: Cache-Daten -->
+        <div class="space-y-4">
+
+            <!-- Koordinaten (gepostet) -->
+            {% if solve.posted_coords %}
+            <div class="glass rounded-xl p-4">
+                <h3 class="text-sm text-gray-500 mb-1">Gepostete Koordinaten</h3>
+                <p class="font-mono text-gray-300">{{ solve.posted_coords }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Beschreibung -->
+            {% if solve.description_text %}
+            <div class="glass rounded-xl p-4">
+                <h3 class="text-sm text-gray-500 mb-2">Beschreibung</h3>
+                <div class="max-h-80 overflow-y-auto text-sm text-gray-300 leading-relaxed pr-2">
+                    {{ solve.description_text[:3000] }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Hint -->
+            {% if solve.hint_decoded %}
+            <div class="glass rounded-xl p-4 gold-border">
+                <h3 class="text-sm text-gold-400 mb-1">Hint (decodiert)</h3>
+                <p class="text-sm text-gray-300 italic">{{ solve.hint_decoded }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Bilder -->
+            {% if images %}
+            <div class="glass rounded-xl p-4">
+                <h3 class="text-sm text-gray-500 mb-2">Raetsel-Bilder</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    {% for img in images %}
+                    <img src="/{{ img }}" alt="Raetselbild"
+                         class="rounded-lg cursor-pointer hover:opacity-80 transition-opacity w-full"
+                         @click="lightbox = '/{{ img }}'">
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Screenshot -->
+            {% if solve.screenshot_path %}
+            <div class="glass rounded-xl p-4">
+                <h3 class="text-sm text-gray-500 mb-2">Screenshot</h3>
+                <img src="/{{ solve.screenshot_path }}" alt="Screenshot"
+                     class="rounded-lg w-full cursor-pointer hover:opacity-80 transition-opacity"
+                     @click="lightbox = '/{{ solve.screenshot_path }}'">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Rechts: Claude-Analyse -->
+        <div class="space-y-4">
+
+            <!-- Geloeste Koordinaten -->
+            <div class="glass-strong rounded-xl p-6 text-center">
+                <h3 class="text-sm text-gray-500 mb-2">Ermittelte Koordinaten</h3>
+                <p class="text-2xl font-bold font-mono text-gold-400 gold-glow mb-3"
+                   x-ref="coords">{{ solve.solved_coords or 'Nicht ermittelt' }}</p>
+
+                {% if solve.solved_coords and solve.solved_coords != 'Nicht ermittelt' %}
+                <button @click="copyCoords()"
+                        class="btn-gold rounded-lg px-4 py-2 text-sm">
+                    <span x-show="!copied">Koordinaten kopieren</span>
+                    <span x-show="copied" x-cloak>Kopiert!</span>
+                </button>
+                {% endif %}
+
+                <!-- Konfidenz-Badge -->
+                <div class="mt-4">
+                    <span class="text-sm text-gray-500">Konfidenz:</span>
+                    <span class="ml-2 px-3 py-1 rounded-full text-sm font-bold"
+                          :class="{
+                              'bg-green-500/20 text-green-400': {{ solve.confidence or 0 }} >= 70,
+                              'bg-yellow-500/20 text-yellow-400': {{ solve.confidence or 0 }} >= 30 && {{ solve.confidence or 0 }} < 70,
+                              'bg-red-500/20 text-red-400': {{ solve.confidence or 0 }} < 30,
+                          }">
+                        {{ solve.confidence|int if solve.confidence else 0 }}%
+                    </span>
+                </div>
+            </div>
+
+            <!-- Claude-Analyse -->
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-sm text-gray-500 mb-3">Claude-Analyse</h3>
+                <div class="analysis text-sm leading-relaxed" x-ref="analysis">
+                    {{ solve.claude_analysis | replace("## ", "<h2>") | replace("\n", "<br>") | safe }}
+                </div>
+            </div>
+
+            <!-- Aktionen -->
+            <div class="flex gap-3">
+                <button @click="retry()"
+                        class="flex-1 glass-strong rounded-xl px-4 py-3 text-sm font-medium
+                               text-gold-400 hover:bg-white/10 transition-colors"
+                        :disabled="retrying">
+                    <span x-show="!retrying">Erneut analysieren</span>
+                    <span x-show="retrying" x-cloak class="flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                        Claude denkt...
+                    </span>
+                </button>
+                <a href="/" class="flex-1 glass-strong rounded-xl px-4 py-3 text-sm font-medium
+                                   text-gray-400 hover:bg-white/10 transition-colors text-center">
+                    Neues Raetsel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div x-show="lightbox" x-cloak
+         @click="lightbox = null"
+         class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 cursor-pointer">
+        <img :src="lightbox" class="max-w-full max-h-full rounded-lg shadow-2xl">
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function resultPage() {
+    return {
+        copied: false,
+        retrying: false,
+        lightbox: null,
+
+        copyCoords() {
+            const text = this.$refs.coords.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                this.copied = true;
+                setTimeout(() => this.copied = false, 2000);
+            });
+        },
+
+        async retry() {
+            this.retrying = true;
+            try {
+                const resp = await fetch('/api/retry/{{ solve.id }}', { method: 'POST' });
+                const data = await resp.json();
+                if (data.error) {
+                    alert('Fehler: ' + data.error);
+                } else {
+                    // Seite neu laden um aktualisierte Daten zu zeigen
+                    location.reload();
+                }
+            } catch (e) {
+                alert('Fehler: ' + e.message);
+            } finally {
+                this.retrying = false;
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

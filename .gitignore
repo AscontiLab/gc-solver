@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+*.db
+gc_cookies.json
+static/images/*
+static/screenshots/*
+!static/images/.gitkeep
+!static/screenshots/.gitkeep

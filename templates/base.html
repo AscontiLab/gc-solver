@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Solver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: { 'inter': ['Inter', 'sans-serif'] },
+                colors: {
+                    dark: '#08080f',
+                    gold: { 400: '#c8aa6e', 500: '#b8963e', 600: '#a8862e' },
+                    glass: 'rgba(255,255,255,0.06)',
+                }
+            }
+        }
+    }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        body {
+            background: #08080f;
+            font-family: 'Inter', sans-serif;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .gold-glow {
+            text-shadow: 0 0 20px rgba(200, 170, 110, 0.4);
+        }
+        .gold-border {
+            border-color: rgba(200, 170, 110, 0.3);
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, #c8aa6e, #b8963e);
+            color: #08080f;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .btn-gold:hover {
+            background: linear-gradient(135deg, #d4b878, #c8aa6e);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(200, 170, 110, 0.3);
+        }
+        .btn-gold:active { transform: scale(0.98); }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .spinner {
+            border: 3px solid rgba(200, 170, 110, 0.2);
+            border-top-color: #c8aa6e;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Markdown in Analyse */
+        .analysis h2 { color: #c8aa6e; font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+        .analysis h3 { color: #d4b878; font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.4rem; }
+        .analysis p { margin: 0.4rem 0; line-height: 1.7; }
+        .analysis ul, .analysis ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+        .analysis li { margin: 0.2rem 0; }
+        .analysis code { background: rgba(200, 170, 110, 0.15); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
+        .analysis pre { background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 0.5rem 0; }
+        .analysis pre code { background: none; padding: 0; }
+        .analysis strong { color: #c8aa6e; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(200, 170, 110, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(200, 170, 110, 0.5); }
+    </style>
+</head>
+<body class="font-inter">
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3 group">
+            <span class="text-2xl">&#127759;</span>
+            <span class="text-gold-400 font-bold text-lg gold-glow">GC Solver</span>
+        </a>
+        <div class="flex items-center gap-4">
+            <a href="/" class="text-sm text-gray-400 hover:text-gold-400 transition-colors">Neues Raetsel</a>
+            <a href="/history" class="text-sm text-gray-400 hover:text-gold-400 transition-colors">History</a>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
