@@ -68,11 +68,11 @@ class GCSession:
         if not settings.GC_USERNAME or not settings.GC_PASSWORD:
             raise ValueError("GC_USERNAME und GC_PASSWORD muessen in .env gesetzt sein")
 
-        await page.goto("https://www.geocaching.com/account/signin", wait_until="networkidle")
+        await page.goto("https://www.geocaching.com/account/signin", wait_until="domcontentloaded", timeout=60000)
         await page.fill("#UsernameOrEmail", settings.GC_USERNAME)
         await page.fill("#Password", settings.GC_PASSWORD)
         await page.click("#SignIn")
-        await page.wait_for_load_state("networkidle")
+        await page.wait_for_load_state("domcontentloaded", timeout=60000)
 
         # Pruefen ob Login erfolgreich
         if "/account/signin" in page.url.lower():
@@ -83,7 +83,7 @@ class GCSession:
     async def _ensure_logged_in(self, page: Page) -> bool:
         """Pruefen ob eingeloggt, sonst neu einloggen."""
         await self._rate_limit()
-        await page.goto("https://www.geocaching.com/account/dashboard", wait_until="networkidle")
+        await page.goto("https://www.geocaching.com/account/dashboard", wait_until="domcontentloaded", timeout=60000)
 
         if "/account/signin" in page.url.lower():
             await self._login(page)
@@ -103,7 +103,7 @@ class GCSession:
 
             # Cache-Seite laden
             url = f"https://www.geocaching.com/geocache/{gc_code}"
-            await page.goto(url, wait_until="networkidle")
+            await page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
             # 404 pruefen
             if "cache not found" in (await page.content()).lower() or page.url.endswith("/404"):

@@ -5,7 +5,7 @@ Automatisierter Raetsel-Loeser fuer Geocaching Mystery Caches. Scrapet das Listi
 ## Features
 
 - **Playwright Scraper** — Auto-Login bei geocaching.com, Cookie-Persistenz, Rate-Limiting
-- **Claude Vision** — Analysiert Beschreibungstext + Bilder, erkennt Raetseltypen, schlaegt Koordinaten vor
+- **GPT-4o Vision** — Analysiert Beschreibungstext + Bilder, erkennt Raetseltypen, schlaegt Koordinaten vor
 - **Konfidenz-Bewertung** — Ehrliche Einschaetzung wie sicher die Loesung ist
 - **24h Cache** — Doppeltes Scraping vermeiden
 - **Retry** — Claude nochmal analysieren lassen ohne neu zu scrapen
@@ -20,7 +20,7 @@ Browser (localhost:8095)
 FastAPI (gc-solver)
     |
     +-- Playwright --> geocaching.com (Login + Scrape)
-    +-- Claude Vision API --> Raetsel analysieren + loesen
+    +-- OpenAI GPT-4o Vision --> Raetsel analysieren + loesen
     +-- SQLite --> Ergebnisse speichern
 ```
 
@@ -29,7 +29,7 @@ FastAPI (gc-solver)
 ```bash
 # .env konfigurieren
 cp .env.example .env
-# GC_USERNAME, GC_PASSWORD, ANTHROPIC_API_KEY eintragen
+# GC_USERNAME, GC_PASSWORD, OPENAI_API_KEY eintragen
 
 # Starten
 python3 -m uvicorn main:app --host 0.0.0.0 --port 8095
@@ -56,6 +56,6 @@ sudo systemctl enable --now gc-solver
 ## Tech Stack
 
 - **Backend:** FastAPI, SQLAlchemy, Playwright
-- **AI:** Claude Sonnet (Vision) via Anthropic API
+- **AI:** GPT-4o (Vision) via OpenAI API
 - **Frontend:** Tailwind CSS, Alpine.js
 - **DB:** SQLite

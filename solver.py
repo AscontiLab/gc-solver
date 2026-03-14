@@ -2,19 +2,18 @@ import base64
 import re
 from pathlib import Path
 
-import anthropic
+from openai import OpenAI
 
 from config import settings
 
 MAX_IMAGES = 5
-MAX_IMAGE_WIDTH = 1568
 
 
 class PuzzleSolver:
-    """Claude Vision fuer Geocaching-Raetsel."""
+    """OpenAI GPT-4o Vision fuer Geocaching-Raetsel."""
 
     def __init__(self):
-        self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
     def solve(
         self,
@@ -81,22 +80,24 @@ Antworte in diesem Format:
 
         # Screenshot hinzufuegen
         if screenshot_path and Path(screenshot_path).exists():
-            content.append(self._image_block(screenshot_path, "Screenshot der Cache-Beschreibung"))
+            content.append(self._image_block(screenshot_path))
 
         # Raetselbilder hinzufuegen (max 5)
-        for i, img_path in enumerate(image_paths[:MAX_IMAGES]):
+        for img_path in image_paths[:MAX_IMAGES]:
             if Path(img_path).exists():
-                content.append(self._image_block(img_path, f"Raetselbild {i + 1}"))
+                content.append(self._image_block(img_path))
 
-        # Claude API aufrufen
-        response = self.client.messages.create(
-            model=settings.CLAUDE_MODEL,
+        # OpenAI API aufrufen
+        response = self.client.chat.completions.create(
+            model=settings.OPENAI_MODEL,
             max_tokens=4096,
-            system=system_prompt,
-            messages=[{"role": "user", "content": content}],
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": content},
+            ],
         )
 
-        analysis = response.content[0].text
+        analysis = response.choices[0].message.content
 
         # Koordinaten und Konfidenz extrahieren
         solved_coords = self._extract_coords(analysis)
@@ -108,12 +109,12 @@ Antworte in diesem Format:
             "confidence": confidence,
         }
 
-    def _image_block(self, path: str, label: str) -> dict:
-        """Bild als base64 Content-Block."""
+    @staticmethod
+    def _image_block(path: str) -> dict:
+        """Bild als base64 Content-Block fuer OpenAI Vision."""
         data = Path(path).read_bytes()
         b64 = base64.standard_b64encode(data).decode("utf-8")
 
-        # Media-Type ermitteln
         suffix = Path(path).suffix.lower()
         media_types = {
             ".png": "image/png",
@@ -125,22 +126,20 @@ Antworte in diesem Format:
         media_type = media_types.get(suffix, "image/png")
 
         return {
-            "type": "image",
-            "source": {
-                "type": "base64",
-                "media_type": media_type,
-                "data": b64,
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:{media_type};base64,{b64}",
             },
         }
 
     @staticmethod
     def _extract_coords(text: str) -> str:
-        """Koordinaten aus Claude-Antwort extrahieren."""
+        """Koordinaten aus Antwort extrahieren."""
         # Format: N 52° 31.123 E 013° 24.456 (oder S/W)
         pattern = r"[NS]\s*\d{1,2}°?\s*\d{1,2}[.,]\d{1,3}\s*[EW]\s*\d{1,3}°?\s*\d{1,2}[.,]\d{1,3}"
         matches = re.findall(pattern, text, re.IGNORECASE)
         if matches:
-            return matches[-1].strip()  # Letzter Match = finale Koordinaten
+            return matches[-1].strip()
 
         # Alternativ: Dezimalformat
         pattern_dec = r"[NS]?\s*-?\d{1,2}[.,]\d{3,6}[°]?\s*[,/]\s*[EW]?\s*-?\d{1,3}[.,]\d{3,6}"
@@ -152,8 +151,7 @@ Antworte in diesem Format:
 
     @staticmethod
     def _extract_confidence(text: str) -> float:
-        """Konfidenz-Prozent aus Claude-Antwort extrahieren."""
-        # Suche nach "XX%" im Konfidenz-Abschnitt
+        """Konfidenz-Prozent aus Antwort extrahieren."""
         conf_section = text.split("## Konfidenz")[-1] if "## Konfidenz" in text else text
         match = re.search(r"(\d{1,3})\s*%", conf_section)
         if match:
