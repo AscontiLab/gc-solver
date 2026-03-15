@@ -237,6 +237,79 @@
             </div>
             {% endif %}
 
+            {% if variable_resolution %}
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-sm text-gray-500 mb-3">Aufgeloeste Variablen</h3>
+                <div class="space-y-4 text-sm text-gray-300">
+                    {% if variable_resolution.resolved_variables %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Werte</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {% for key, value in variable_resolution.resolved_variables.items() %}
+                            <div class="rounded-lg bg-white/5 px-3 py-2 font-mono">{{ key }} = {{ value }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if variable_resolution.evidence %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Belege</p>
+                        <ul class="space-y-2 list-disc list-inside">
+                            {% for key, value in variable_resolution.evidence.items() %}
+                            <li><span class="font-mono">{{ key }}</span>: {{ value }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if variable_resolution.resolution_steps %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Herleitung</p>
+                        <ol class="space-y-2 list-decimal list-inside">
+                            {% for item in variable_resolution.resolution_steps %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    {% endif %}
+
+                    {% if variable_resolution.unresolved_variables %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Noch offen</p>
+                        <ul class="space-y-2 list-disc list-inside">
+                            {% for item in variable_resolution.unresolved_variables %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="pt-2 border-t border-white/10">
+                        <p class="text-gray-500 mb-2">Manuell weiterrechnen</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {% for item in variable_resolution.unresolved_variables %}
+                            {% set variable_name = item.split(':', 1)[0].strip() if ':' in item else item.strip().split(' ', 1)[0] %}
+                            <label class="block">
+                                <span class="block text-xs text-gray-500 mb-1 font-mono">{{ variable_name }}</span>
+                                <input type="text"
+                                       class="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-gold-400"
+                                       x-model="manualOverrides['{{ variable_name }}']"
+                                       placeholder="Wert eingeben">
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <button @click="manualResolve()"
+                                class="mt-3 btn-gold rounded-lg px-4 py-2 text-sm"
+                                :disabled="manualResolving">
+                            <span x-show="!manualResolving">Mit meinen Werten weiterrechnen</span>
+                            <span x-show="manualResolving" x-cloak>Rechne...</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             {% if solve.research_url %}
             <div class="glass rounded-xl p-6 gold-border">
                 <h3 class="text-sm text-gold-400 mb-3">Externe Quelle</h3>
@@ -303,14 +376,31 @@ function resultPage() {
     return {
         copied: false,
         retrying: false,
+        manualResolving: false,
         lightbox: null,
+        manualOverrides: {},
 
-        copyCoords() {
+        async copyCoords() {
             const text = this.$refs.coords.textContent.trim();
-            navigator.clipboard.writeText(text).then(() => {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.setAttribute('readonly', '');
+                    textarea.style.position = 'absolute';
+                    textarea.style.left = '-9999px';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                }
                 this.copied = true;
                 setTimeout(() => this.copied = false, 2000);
-            });
+            } catch (e) {
+                alert('Kopieren hat nicht funktioniert.');
+            }
         },
 
         async retry() {
@@ -328,6 +418,27 @@ function resultPage() {
                 alert('Fehler: ' + e.message);
             } finally {
                 this.retrying = false;
+            }
+        },
+
+        async manualResolve() {
+            this.manualResolving = true;
+            try {
+                const resp = await fetch('/api/manual-resolve/{{ solve.id }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.manualOverrides),
+                });
+                const data = await resp.json();
+                if (data.error) {
+                    alert('Fehler: ' + data.error);
+                } else {
+                    location.reload();
+                }
+            } catch (e) {
+                alert('Fehler: ' + e.message);
+            } finally {
+                this.manualResolving = false;
             }
         }
     };

@@ -35,8 +35,21 @@ def _template_context(request: Request, solve: PuzzleSolve, images: list[str], c
         "images": images,
         "cached": cached,
         "facts": _parse_json_blob(solve.extracted_facts_json),
+        "variable_resolution": _parse_json_blob(solve.variable_resolution_json),
         "structured_solution": _parse_json_blob(solve.structured_solution_json),
     }
+
+
+def _clean_manual_overrides(payload: dict) -> dict[str, str]:
+    cleaned: dict[str, str] = {}
+    for key, value in payload.items():
+        key = str(key).strip().upper()
+        if not key:
+            continue
+        text = str(value).strip()
+        if text:
+            cleaned[key] = text
+    return cleaned
 
 
 @router.post("/solve", response_class=HTMLResponse)
@@ -99,6 +112,7 @@ async def solve_cache(
             research_summary=result.get("research_summary", ""),
             research_excerpt=result.get("research_excerpt", ""),
             extracted_facts_json=result.get("extracted_facts_json", ""),
+            variable_resolution_json=result.get("variable_resolution_json", ""),
             structured_solution_json=result.get("structured_solution_json", ""),
             solve_status="solved" if result["solved_coords"] != "Nicht ermittelt" else "failed",
         )
@@ -171,6 +185,7 @@ async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
         solve.research_summary = result.get("research_summary", "")
         solve.research_excerpt = result.get("research_excerpt", "")
         solve.extracted_facts_json = result.get("extracted_facts_json", "")
+        solve.variable_resolution_json = result.get("variable_resolution_json", "")
         solve.structured_solution_json = result.get("structured_solution_json", "")
         solve.solve_status = "solved" if result["solved_coords"] != "Nicht ermittelt" else "failed"
         db.commit()
@@ -181,9 +196,69 @@ async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
             "confidence": result["confidence"],
             "status": solve.solve_status,
             "facts": _parse_json_blob(solve.extracted_facts_json),
+            "variable_resolution": _parse_json_blob(solve.variable_resolution_json),
             "structured_solution": _parse_json_blob(solve.structured_solution_json),
         })
 
     except Exception as e:
         logger.exception("Retry solve failed for id=%s", solve_id)
         return JSONResponse({"error": "Analyse konnte nicht erneut ausgefuehrt werden."}, status_code=500)
+
+
+@router.post("/api/manual-resolve/{solve_id}", response_class=JSONResponse)
+async def manual_resolve(solve_id: int, request: Request, db: Session = Depends(get_db)):
+    solve = db.get(PuzzleSolve, solve_id)
+    if not solve:
+        return JSONResponse({"error": "Nicht gefunden"}, status_code=404)
+
+    payload = await request.json()
+    manual_overrides = _clean_manual_overrides(payload if isinstance(payload, dict) else {})
+    if not manual_overrides:
+        return JSONResponse({"error": "Keine gueltigen Variablenwerte uebergeben"}, status_code=400)
+
+    try:
+        result = await run_in_threadpool(
+            puzzle_solver.solve_with_manual_variables,
+            gc_code=solve.gc_code,
+            description_text=solve.description_text or "",
+            hint=solve.hint_decoded or "",
+            coords=solve.posted_coords or "",
+            screenshot_path=solve.screenshot_path or "",
+            image_paths=json.loads(solve.image_paths or "[]"),
+            difficulty=solve.difficulty or 0,
+            facts_payload=_parse_json_blob(solve.extracted_facts_json),
+            variable_payload=_parse_json_blob(solve.variable_resolution_json),
+            manual_overrides=manual_overrides,
+            research_data={
+                "research_source_type": solve.research_source_type or "",
+                "research_url": solve.research_url or "",
+                "research_summary": solve.research_summary or "",
+                "research_excerpt": solve.research_excerpt or "",
+            },
+        )
+
+        solve.claude_analysis = result["analysis"]
+        solve.solved_coords = result["solved_coords"]
+        solve.confidence = result["confidence"]
+        solve.research_source_type = result.get("research_source_type", "")
+        solve.research_url = result.get("research_url", "")
+        solve.research_summary = result.get("research_summary", "")
+        solve.research_excerpt = result.get("research_excerpt", "")
+        solve.extracted_facts_json = result.get("extracted_facts_json", "")
+        solve.variable_resolution_json = result.get("variable_resolution_json", "")
+        solve.structured_solution_json = result.get("structured_solution_json", "")
+        solve.solve_status = "solved" if result["solved_coords"] != "Nicht ermittelt" else "failed"
+        db.commit()
+
+        return JSONResponse({
+            "analysis": result["analysis"],
+            "solved_coords": result["solved_coords"],
+            "confidence": result["confidence"],
+            "status": solve.solve_status,
+            "facts": _parse_json_blob(solve.extracted_facts_json),
+            "variable_resolution": _parse_json_blob(solve.variable_resolution_json),
+            "structured_solution": _parse_json_blob(solve.structured_solution_json),
+        })
+    except Exception:
+        logger.exception("Manual resolve failed for id=%s", solve_id)
+        return JSONResponse({"error": "Manuelle Weiterrechnung konnte nicht ausgefuehrt werden."}, status_code=500)

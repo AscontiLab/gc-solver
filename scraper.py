@@ -167,13 +167,21 @@ class GCSession:
             # Bilder herunterladen
             data["image_paths"] = await self._download_images(page, gc_code)
 
-            # Screenshot der Beschreibung
+            # Screenshot der Beschreibung. Timeout darf den Solve nicht kaputt machen.
             screenshot_path = str(SCREENSHOT_DIR / f"{gc_code}.png")
-            if await desc_el.count():
-                await desc_el.screenshot(path=screenshot_path)
-            else:
-                await page.screenshot(path=screenshot_path, full_page=False)
-            data["screenshot_path"] = screenshot_path
+            data["screenshot_path"] = ""
+            try:
+                if await desc_el.count():
+                    await desc_el.screenshot(path=screenshot_path, timeout=10000)
+                else:
+                    await page.screenshot(path=screenshot_path, full_page=False, timeout=10000)
+                data["screenshot_path"] = screenshot_path
+            except Exception:
+                try:
+                    await page.screenshot(path=screenshot_path, full_page=False, timeout=10000)
+                    data["screenshot_path"] = screenshot_path
+                except Exception:
+                    data["screenshot_path"] = ""
 
             await self._save_cookies()
             return data

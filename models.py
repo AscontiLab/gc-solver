@@ -27,6 +27,7 @@ class PuzzleSolve(Base):
     research_summary = Column(String(200))
     research_excerpt = Column(Text)
     extracted_facts_json = Column(Text)
+    variable_resolution_json = Column(Text)
     structured_solution_json = Column(Text)
     solve_status = Column(String(20), default="pending")  # pending, solved, failed
     created_at = Column(DateTime, default=datetime.utcnow)

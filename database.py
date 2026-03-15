@@ -29,6 +29,7 @@ def ensure_schema():
         "research_summary": "ALTER TABLE puzzle_solves ADD COLUMN research_summary VARCHAR(200)",
         "research_excerpt": "ALTER TABLE puzzle_solves ADD COLUMN research_excerpt TEXT",
         "extracted_facts_json": "ALTER TABLE puzzle_solves ADD COLUMN extracted_facts_json TEXT",
+        "variable_resolution_json": "ALTER TABLE puzzle_solves ADD COLUMN variable_resolution_json TEXT",
         "structured_solution_json": "ALTER TABLE puzzle_solves ADD COLUMN structured_solution_json TEXT",
     }
 
