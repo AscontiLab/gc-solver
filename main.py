@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from database import engine, Base
+from database import engine, Base, ensure_schema
 from scraper import gc_session
 from routes import home, solve, history
 
@@ -12,6 +12,7 @@ from routes import home, solve, history
 async def lifespan(app: FastAPI):
     # Startup: DB + Browser
     Base.metadata.create_all(bind=engine)
+    ensure_schema()
     await gc_session.start()
     yield
     # Shutdown: Browser schliessen

@@ -20,6 +20,25 @@ logger = logging.getLogger(__name__)
 CACHE_HOURS = 24
 
 
+def _parse_json_blob(value: str | None) -> dict:
+    try:
+        payload = json.loads(value or "{}")
+        return payload if isinstance(payload, dict) else {}
+    except json.JSONDecodeError:
+        return {}
+
+
+def _template_context(request: Request, solve: PuzzleSolve, images: list[str], cached: bool) -> dict:
+    return {
+        "request": request,
+        "solve": solve,
+        "images": images,
+        "cached": cached,
+        "facts": _parse_json_blob(solve.extracted_facts_json),
+        "structured_solution": _parse_json_blob(solve.structured_solution_json),
+    }
+
+
 @router.post("/solve", response_class=HTMLResponse)
 async def solve_cache(
     request: Request,
@@ -37,12 +56,10 @@ async def solve_cache(
         .first()
     )
     if existing:
-        return templates.TemplateResponse("result.html", {
-            "request": request,
-            "solve": existing,
-            "images": json.loads(existing.image_paths or "[]"),
-            "cached": True,
-        })
+        return templates.TemplateResponse(
+            "result.html",
+            _template_context(request, existing, json.loads(existing.image_paths or "[]"), True),
+        )
 
     try:
         # Scrapen
@@ -77,18 +94,22 @@ async def solve_cache(
             claude_analysis=result["analysis"],
             solved_coords=result["solved_coords"],
             confidence=result["confidence"],
+            research_source_type=result.get("research_source_type", ""),
+            research_url=result.get("research_url", ""),
+            research_summary=result.get("research_summary", ""),
+            research_excerpt=result.get("research_excerpt", ""),
+            extracted_facts_json=result.get("extracted_facts_json", ""),
+            structured_solution_json=result.get("structured_solution_json", ""),
             solve_status="solved" if result["solved_coords"] != "Nicht ermittelt" else "failed",
         )
         db.add(solve)
         db.commit()
         db.refresh(solve)
 
-        return templates.TemplateResponse("result.html", {
-            "request": request,
-            "solve": solve,
-            "images": cache_data.get("image_paths", []),
-            "cached": False,
-        })
+        return templates.TemplateResponse(
+            "result.html",
+            _template_context(request, solve, cache_data.get("image_paths", []), False),
+        )
 
     except ValueError as e:
         return templates.TemplateResponse("home.html", {
@@ -118,12 +139,10 @@ async def view_solve(request: Request, gc_code: str, db: Session = Depends(get_d
             "error": f"Kein Ergebnis fuer {gc_code} gefunden",
         })
 
-    return templates.TemplateResponse("result.html", {
-        "request": request,
-        "solve": solve,
-        "images": json.loads(solve.image_paths or "[]"),
-        "cached": True,
-    })
+    return templates.TemplateResponse(
+        "result.html",
+        _template_context(request, solve, json.loads(solve.image_paths or "[]"), True),
+    )
 
 
 @router.post("/api/retry/{solve_id}", response_class=JSONResponse)
@@ -147,6 +166,12 @@ async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
         solve.claude_analysis = result["analysis"]
         solve.solved_coords = result["solved_coords"]
         solve.confidence = result["confidence"]
+        solve.research_source_type = result.get("research_source_type", "")
+        solve.research_url = result.get("research_url", "")
+        solve.research_summary = result.get("research_summary", "")
+        solve.research_excerpt = result.get("research_excerpt", "")
+        solve.extracted_facts_json = result.get("extracted_facts_json", "")
+        solve.structured_solution_json = result.get("structured_solution_json", "")
         solve.solve_status = "solved" if result["solved_coords"] != "Nicht ermittelt" else "failed"
         db.commit()
 
@@ -155,6 +180,8 @@ async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
             "solved_coords": result["solved_coords"],
             "confidence": result["confidence"],
             "status": solve.solve_status,
+            "facts": _parse_json_blob(solve.extracted_facts_json),
+            "structured_solution": _parse_json_blob(solve.structured_solution_json),
         })
 
     except Exception as e:

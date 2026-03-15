@@ -114,6 +114,156 @@
                 </div>
             </div>
 
+            {% if facts %}
+            <div class="glass rounded-xl p-6">
+                <h3 class="text-sm text-gray-500 mb-3">Strukturierte Fakten</h3>
+                <div class="space-y-4 text-sm text-gray-300">
+                    {% if facts.puzzle_type %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Raetseltyp</p>
+                        <p>{{ facts.puzzle_type }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if facts.coordinate_prefix %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Koordinaten-Prefix</p>
+                        <p class="font-mono">{{ facts.coordinate_prefix }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if facts.referenced_numbers %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Relevante Zahlen</p>
+                        <div class="flex flex-wrap gap-2">
+                            {% for number in facts.referenced_numbers %}
+                            <span class="px-2 py-1 rounded-md bg-white/5 font-mono">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if facts.referenced_terms %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Relevante Begriffe</p>
+                        <div class="flex flex-wrap gap-2">
+                            {% for term in facts.referenced_terms %}
+                            <span class="px-2 py-1 rounded-md bg-white/5">{{ term }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if facts.external_facts %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Externe Fakten</p>
+                        <ul class="space-y-2 list-disc list-inside">
+                            {% for item in facts.external_facts %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if facts.candidate_mappings %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Moegliche Zuordnungen</p>
+                        <ul class="space-y-2 list-disc list-inside">
+                            {% for item in facts.candidate_mappings %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if facts.missing_links %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Noch offene Luecken</p>
+                        <ul class="space-y-2 list-disc list-inside">
+                            {% for item in facts.missing_links %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if structured_solution %}
+            <div class="glass rounded-xl p-6 gold-border">
+                <h3 class="text-sm text-gold-400 mb-3">Strukturierte Ableitung</h3>
+                <div class="space-y-4 text-sm text-gray-300">
+                    {% if structured_solution.used_facts %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Verwendete Fakten</p>
+                        <ul class="space-y-2 list-disc list-inside">
+                            {% for item in structured_solution.used_facts %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if structured_solution.reasoning_steps %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Schlussfolgerung</p>
+                        <ol class="space-y-2 list-decimal list-inside">
+                            {% for item in structured_solution.reasoning_steps %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    {% endif %}
+
+                    {% if structured_solution.candidate_coordinate_logic %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Moegliche Koordinatenlogik</p>
+                        <ul class="space-y-2 list-disc list-inside">
+                            {% for item in structured_solution.candidate_coordinate_logic %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if structured_solution.why_not_solved %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Warum nicht geloest</p>
+                        <p>{{ structured_solution.why_not_solved }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if solve.research_url %}
+            <div class="glass rounded-xl p-6 gold-border">
+                <h3 class="text-sm text-gold-400 mb-3">Externe Quelle</h3>
+                <div class="space-y-3 text-sm text-gray-300">
+                    <div>
+                        <p class="text-gray-500 mb-1">Quelle</p>
+                        <a href="{{ solve.research_url }}" target="_blank" rel="noopener noreferrer"
+                           class="text-gold-400 hover:underline break-all">
+                            {{ solve.research_summary or solve.research_url }}
+                        </a>
+                    </div>
+                    {% if solve.research_source_type %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Typ</p>
+                        <p>{{ solve.research_source_type }}</p>
+                    </div>
+                    {% endif %}
+                    {% if solve.research_excerpt %}
+                    <div>
+                        <p class="text-gray-500 mb-1">Verwendeter Kontext</p>
+                        <div class="whitespace-pre-wrap break-words text-gray-300">{{ solve.research_excerpt[:1200] }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Aktionen -->
             <div class="flex gap-3">
                 <button @click="retry()"

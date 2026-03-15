@@ -22,5 +22,11 @@ class PuzzleSolve(Base):
     claude_analysis = Column(Text)
     solved_coords = Column(String(100))
     confidence = Column(Float)
+    research_source_type = Column(String(50))
+    research_url = Column(String(500))
+    research_summary = Column(String(200))
+    research_excerpt = Column(Text)
+    extracted_facts_json = Column(Text)
+    structured_solution_json = Column(Text)
     solve_status = Column(String(20), default="pending")  # pending, solved, failed
     created_at = Column(DateTime, default=datetime.utcnow)
