@@ -1,7 +1,9 @@
 import json
+import logging
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Request, Depends, Form
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -13,6 +15,7 @@ from solver import puzzle_solver
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+logger = logging.getLogger(__name__)
 
 CACHE_HOURS = 24
 
@@ -46,7 +49,8 @@ async def solve_cache(
         cache_data = await gc_session.scrape_cache(gc_code)
 
         # Claude loesen lassen
-        result = puzzle_solver.solve(
+        result = await run_in_threadpool(
+            puzzle_solver.solve,
             gc_code=gc_code,
             description_text=cache_data.get("description_text", ""),
             hint=cache_data.get("hint_decoded", ""),
@@ -92,9 +96,10 @@ async def solve_cache(
             "error": str(e),
         })
     except Exception as e:
+        logger.exception("Unexpected solve error for %s", gc_code)
         return templates.TemplateResponse("home.html", {
             "request": request,
-            "error": f"Fehler: {e}",
+            "error": "Fehler beim Analysieren des Cache-Listings. Bitte spaeter erneut versuchen.",
         })
 
 
@@ -128,7 +133,8 @@ async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
         return JSONResponse({"error": "Nicht gefunden"}, status_code=404)
 
     try:
-        result = puzzle_solver.solve(
+        result = await run_in_threadpool(
+            puzzle_solver.solve,
             gc_code=solve.gc_code,
             description_text=solve.description_text or "",
             hint=solve.hint_decoded or "",
@@ -152,4 +158,5 @@ async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
         })
 
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+        logger.exception("Retry solve failed for id=%s", solve_id)
+        return JSONResponse({"error": "Analyse konnte nicht erneut ausgefuehrt werden."}, status_code=500)

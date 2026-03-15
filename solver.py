@@ -80,12 +80,16 @@ Antworte in diesem Format:
 
         # Screenshot hinzufuegen
         if screenshot_path and Path(screenshot_path).exists():
-            content.append(self._image_block(screenshot_path))
+            image_block = self._image_block(screenshot_path)
+            if image_block:
+                content.append(image_block)
 
         # Raetselbilder hinzufuegen (max 5)
         for img_path in image_paths[:MAX_IMAGES]:
             if Path(img_path).exists():
-                content.append(self._image_block(img_path))
+                image_block = self._image_block(img_path)
+                if image_block:
+                    content.append(image_block)
 
         # OpenAI API aufrufen
         response = self.client.chat.completions.create(
@@ -110,20 +114,13 @@ Antworte in diesem Format:
         }
 
     @staticmethod
-    def _image_block(path: str) -> dict:
+    def _image_block(path: str) -> dict | None:
         """Bild als base64 Content-Block fuer OpenAI Vision."""
         data = Path(path).read_bytes()
+        media_type = PuzzleSolver._detect_media_type(data)
+        if not media_type:
+            return None
         b64 = base64.standard_b64encode(data).decode("utf-8")
-
-        suffix = Path(path).suffix.lower()
-        media_types = {
-            ".png": "image/png",
-            ".jpg": "image/jpeg",
-            ".jpeg": "image/jpeg",
-            ".gif": "image/gif",
-            ".webp": "image/webp",
-        }
-        media_type = media_types.get(suffix, "image/png")
 
         return {
             "type": "image_url",
@@ -131,6 +128,19 @@ Antworte in diesem Format:
                 "url": f"data:{media_type};base64,{b64}",
             },
         }
+
+    @staticmethod
+    def _detect_media_type(data: bytes) -> str | None:
+        """Erkennt unterstuetzte Bildtypen per Dateisignatur."""
+        if data.startswith(b"\x89PNG\r\n\x1a\n"):
+            return "image/png"
+        if data.startswith(b"\xff\xd8\xff"):
+            return "image/jpeg"
+        if data.startswith((b"GIF87a", b"GIF89a")):
+            return "image/gif"
+        if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+            return "image/webp"
+        return None
 
     @staticmethod
     def _extract_coords(text: str) -> str:

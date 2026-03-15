@@ -11,6 +11,12 @@ from config import settings
 COOKIE_PATH = Path("gc_cookies.json")
 IMAGE_DIR = Path("static/images")
 SCREENSHOT_DIR = Path("static/screenshots")
+SUPPORTED_IMAGE_TYPES = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+}
 
 
 class GCSession:
@@ -216,7 +222,10 @@ class GCSession:
                 # Herunterladen via Playwright
                 response = await self._context.request.get(src)
                 if response.ok:
-                    ext = Path(src.split("?")[0]).suffix or ".png"
+                    content_type = (response.headers.get("content-type") or "").split(";", 1)[0].strip().lower()
+                    if content_type not in SUPPORTED_IMAGE_TYPES:
+                        continue
+                    ext = SUPPORTED_IMAGE_TYPES[content_type]
                     filename = f"{gc_code}_{i}{ext}"
                     filepath = str(IMAGE_DIR / filename)
                     with open(filepath, "wb") as f:
