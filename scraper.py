@@ -1,10 +1,12 @@
 import asyncio
+import io
 import json
 import os
 import re
 import time
 from pathlib import Path
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+from PIL import Image, UnidentifiedImageError
 
 from config import settings
 
@@ -225,16 +227,31 @@ class GCSession:
                     content_type = (response.headers.get("content-type") or "").split(";", 1)[0].strip().lower()
                     if content_type not in SUPPORTED_IMAGE_TYPES:
                         continue
-                    ext = SUPPORTED_IMAGE_TYPES[content_type]
-                    filename = f"{gc_code}_{i}{ext}"
+                    body = await response.body()
+                    normalized = self._normalize_image_bytes(body)
+                    if not normalized:
+                        continue
+                    filename = f"{gc_code}_{i}.png"
                     filepath = str(IMAGE_DIR / filename)
                     with open(filepath, "wb") as f:
-                        f.write(await response.body())
+                        f.write(normalized)
                     paths.append(filepath)
             except Exception:
                 continue
 
         return paths
+
+    @staticmethod
+    def _normalize_image_bytes(data: bytes) -> bytes | None:
+        """Bilddaten validieren und als PNG normalisieren."""
+        try:
+            with Image.open(io.BytesIO(data)) as img:
+                normalized = img.convert("RGB")
+                buffer = io.BytesIO()
+                normalized.save(buffer, format="PNG")
+                return buffer.getvalue()
+        except (OSError, UnidentifiedImageError, ValueError):
+            return None
 
     @staticmethod
     def _decode_rot13(text: str) -> str:

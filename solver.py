@@ -1,8 +1,10 @@
 import base64
+import io
 import re
 from pathlib import Path
 
-from openai import OpenAI
+from openai import BadRequestError, OpenAI
+from PIL import Image, UnidentifiedImageError
 
 from config import settings
 
@@ -45,10 +47,6 @@ Wichtige Regeln:
 4. Gib die finalen Koordinaten im Format N/S DD° MM.MMM E/W DDD° MM.MMM an
 5. Bewerte deine Konfidenz ehrlich (0-100%)"""
 
-        # Message Content aufbauen
-        content = []
-
-        # Textbeschreibung
         text_block = f"""## Geocache: {gc_code}
 
 **Gepostete Koordinaten:** {coords}
@@ -75,31 +73,32 @@ Antworte in diesem Format:
 
 ## Konfidenz
 [0-100]% — [Begruendung]"""
+        attempts = [
+            self._build_content(text_block, screenshot_path, image_paths),
+            self._build_content(text_block, screenshot_path, []),
+            self._build_content(text_block, "", []),
+        ]
 
-        content.append({"type": "text", "text": text_block})
+        response = None
+        last_error = None
+        for content in attempts:
+            try:
+                response = self.client.chat.completions.create(
+                    model=settings.OPENAI_MODEL,
+                    max_tokens=4096,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": content},
+                    ],
+                )
+                break
+            except BadRequestError as exc:
+                if getattr(exc, "code", None) != "invalid_image_format":
+                    raise
+                last_error = exc
 
-        # Screenshot hinzufuegen
-        if screenshot_path and Path(screenshot_path).exists():
-            image_block = self._image_block(screenshot_path)
-            if image_block:
-                content.append(image_block)
-
-        # Raetselbilder hinzufuegen (max 5)
-        for img_path in image_paths[:MAX_IMAGES]:
-            if Path(img_path).exists():
-                image_block = self._image_block(img_path)
-                if image_block:
-                    content.append(image_block)
-
-        # OpenAI API aufrufen
-        response = self.client.chat.completions.create(
-            model=settings.OPENAI_MODEL,
-            max_tokens=4096,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": content},
-            ],
-        )
+        if response is None:
+            raise last_error or RuntimeError("OpenAI request failed")
 
         analysis = response.choices[0].message.content
 
@@ -113,34 +112,54 @@ Antworte in diesem Format:
             "confidence": confidence,
         }
 
+    def _build_content(
+        self,
+        text_block: str,
+        screenshot_path: str,
+        image_paths: list[str],
+    ) -> list[dict]:
+        """Message-Content mit optionalen Bildern aufbauen."""
+        content = [{"type": "text", "text": text_block}]
+
+        if screenshot_path and Path(screenshot_path).exists():
+            image_block = self._image_block(screenshot_path)
+            if image_block:
+                content.append(image_block)
+
+        for img_path in image_paths[:MAX_IMAGES]:
+            if Path(img_path).exists():
+                image_block = self._image_block(img_path)
+                if image_block:
+                    content.append(image_block)
+
+        return content
+
     @staticmethod
     def _image_block(path: str) -> dict | None:
         """Bild als base64 Content-Block fuer OpenAI Vision."""
-        data = Path(path).read_bytes()
-        media_type = PuzzleSolver._detect_media_type(data)
-        if not media_type:
+        data = PuzzleSolver._normalize_image_bytes(path)
+        if not data:
             return None
         b64 = base64.standard_b64encode(data).decode("utf-8")
 
         return {
             "type": "image_url",
             "image_url": {
-                "url": f"data:{media_type};base64,{b64}",
+                "url": f"data:image/png;base64,{b64}",
             },
         }
 
     @staticmethod
-    def _detect_media_type(data: bytes) -> str | None:
-        """Erkennt unterstuetzte Bildtypen per Dateisignatur."""
-        if data.startswith(b"\x89PNG\r\n\x1a\n"):
-            return "image/png"
-        if data.startswith(b"\xff\xd8\xff"):
-            return "image/jpeg"
-        if data.startswith((b"GIF87a", b"GIF89a")):
-            return "image/gif"
-        if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
-            return "image/webp"
-        return None
+    def _normalize_image_bytes(path: str) -> bytes | None:
+        """Bild robust laden und als sauberes PNG re-encodieren."""
+        try:
+            with Image.open(path) as img:
+                normalized = img.convert("RGB")
+                buffer = io.BytesIO()
+                normalized.save(buffer, format="PNG")
+                return buffer.getvalue()
+        except (OSError, UnidentifiedImageError, ValueError):
+            return None
 
     @staticmethod
     def _extract_coords(text: str) -> str:
