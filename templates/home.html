@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="flex flex-col items-center justify-center min-h-[70vh]" x-data="{ loading: false, gcCode: '' }">
+<div class="flex flex-col items-center justify-center min-h-[70vh]" x-data="{ loading: false, solving: false, gcCode: '' }">
 
     <!-- Hero -->
     <div class="text-center mb-10 fade-in">
@@ -17,7 +17,7 @@
 
     <!-- Eingabe -->
     <form method="post" action="/solve"
-          @submit="if(gcCode.trim()) loading = true"
+          @submit="if(gcCode.trim()) { loading = true; solving = true; }"
           class="w-full max-w-md slide-up">
         <div class="glass-strong rounded-2xl p-8">
             <label class="block text-sm text-gray-300 mb-2 font-medium">GC-Code eingeben</label>
@@ -61,6 +61,20 @@
         <div class="glass rounded-xl p-4 text-center">
             <div class="text-2xl mb-2">&#128205;</div>
             <p class="text-sm text-gray-300">Koordinaten-Vorschlag mit Konfidenz</p>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div x-show="solving" x-cloak class="fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(8,8,15,0.92);backdrop-filter:blur(8px)">
+        <div class="text-center">
+            <div class="text-4xl mb-4" style="animation:spin 2s linear infinite">&#128270;</div>
+            <div class="text-xl font-semibold text-white mb-2">Raetsel wird geloest...</div>
+            <div class="text-gray-400 text-sm">Das kann 15-30 Sekunden dauern</div>
+            <div class="mt-6 flex justify-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-amber-400" style="animation:bounce 1.4s infinite;animation-delay:0s"></span>
+                <span class="w-2 h-2 rounded-full bg-amber-400" style="animation:bounce 1.4s infinite;animation-delay:0.2s"></span>
+                <span class="w-2 h-2 rounded-full bg-amber-400" style="animation:bounce 1.4s infinite;animation-delay:0.4s"></span>
+            </div>
         </div>
     </div>
 </div>

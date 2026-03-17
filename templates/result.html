@@ -2,6 +2,15 @@
 {% block content %}
 <div x-data="resultPage()" class="fade-in">
 
+    <!-- Toast Notifications -->
+    <div class="fixed top-4 right-4 z-50 flex flex-col gap-2" style="max-width:320px">
+        <template x-for="t in toasts" :key="t.id">
+            <div x-transition class="px-4 py-3 rounded-lg text-sm font-medium shadow-lg"
+                :class="t.type === 'error' ? 'bg-red-900/90 text-red-200' : 'bg-emerald-900/90 text-emerald-200'"
+                x-text="t.msg"></div>
+        </template>
+    </div>
+
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
@@ -381,6 +390,12 @@ function resultPage() {
         manualResolving: false,
         lightbox: null,
         manualOverrides: {},
+        toasts: [],
+        showToast(msg, type) {
+            var id = Date.now();
+            this.toasts.push({id: id, msg: msg, type: type || 'info'});
+            setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000);
+        },
 
         async copyCoords() {
             const text = this.$refs.coords.textContent.trim();
@@ -401,7 +416,7 @@ function resultPage() {
                 this.copied = true;
                 setTimeout(() => this.copied = false, 2000);
             } catch (e) {
-                alert('Kopieren hat nicht funktioniert.');
+                this.showToast('Kopieren hat nicht funktioniert.', 'error');
             }
         },
 
@@ -411,13 +426,13 @@ function resultPage() {
                 const resp = await fetch('/api/retry/{{ solve.id }}', { method: 'POST' });
                 const data = await resp.json();
                 if (data.error) {
-                    alert('Fehler: ' + data.error);
+                    this.showToast('Fehler: ' + data.error, 'error');
                 } else {
                     // Seite neu laden um aktualisierte Daten zu zeigen
                     location.reload();
                 }
             } catch (e) {
-                alert('Fehler: ' + e.message);
+                this.showToast('Fehler: ' + e.message, 'error');
             } finally {
                 this.retrying = false;
             }
@@ -433,12 +448,12 @@ function resultPage() {
                 });
                 const data = await resp.json();
                 if (data.error) {
-                    alert('Fehler: ' + data.error);
+                    this.showToast('Fehler: ' + data.error, 'error');
                 } else {
                     location.reload();
                 }
             } catch (e) {
-                alert('Fehler: ' + e.message);
+                this.showToast('Fehler: ' + e.message, 'error');
             } finally {
                 this.manualResolving = false;
             }
