@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gold-400 gold-glow">{{ solve.cache_name or solve.gc_code }}</h1>
-            <div class="flex items-center gap-3 mt-1 text-sm text-gray-400">
+            <div class="flex items-center gap-3 mt-1 text-sm text-gray-300">
                 <span class="font-mono text-gold-400/80">{{ solve.gc_code }}</span>
                 {% if solve.cache_type %}<span>{{ solve.cache_type }}</span>{% endif %}
                 {% if solve.difficulty %}<span>D{{ solve.difficulty }}/T{{ solve.terrain }}</span>{% endif %}
@@ -27,7 +27,7 @@
             <!-- Koordinaten (gepostet) -->
             {% if solve.posted_coords %}
             <div class="glass rounded-xl p-4">
-                <h3 class="text-sm text-gray-500 mb-1">Gepostete Koordinaten</h3>
+                <h3 class="text-sm text-gray-400 mb-1">Gepostete Koordinaten</h3>
                 <p class="font-mono text-gray-300">{{ solve.posted_coords }}</p>
             </div>
             {% endif %}
@@ -35,7 +35,7 @@
             <!-- Beschreibung -->
             {% if solve.description_text %}
             <div class="glass rounded-xl p-4">
-                <h3 class="text-sm text-gray-500 mb-2">Beschreibung</h3>
+                <h3 class="text-sm text-gray-400 mb-2">Beschreibung</h3>
                 <div class="max-h-80 overflow-y-auto text-sm text-gray-300 leading-relaxed pr-2">
                     {{ solve.description_text[:3000] }}
                 </div>
@@ -53,7 +53,7 @@
             <!-- Bilder -->
             {% if images %}
             <div class="glass rounded-xl p-4">
-                <h3 class="text-sm text-gray-500 mb-2">Raetsel-Bilder</h3>
+                <h3 class="text-sm text-gray-400 mb-2">Raetsel-Bilder</h3>
                 <div class="grid grid-cols-2 gap-2">
                     {% for img in images %}
                     <img src="/{{ img }}" alt="Raetselbild"
@@ -67,7 +67,7 @@
             <!-- Screenshot -->
             {% if solve.screenshot_path %}
             <div class="glass rounded-xl p-4">
-                <h3 class="text-sm text-gray-500 mb-2">Screenshot</h3>
+                <h3 class="text-sm text-gray-400 mb-2">Screenshot</h3>
                 <img src="/{{ solve.screenshot_path }}" alt="Screenshot"
                      class="rounded-lg w-full cursor-pointer hover:opacity-80 transition-opacity"
                      @click="lightbox = '/{{ solve.screenshot_path }}'">
@@ -80,7 +80,7 @@
 
             <!-- Geloeste Koordinaten -->
             <div class="glass-strong rounded-xl p-6 text-center">
-                <h3 class="text-sm text-gray-500 mb-2">Ermittelte Koordinaten</h3>
+                <h3 class="text-sm text-gray-400 mb-2">Ermittelte Koordinaten</h3>
                 <p class="text-2xl font-bold font-mono text-gold-400 gold-glow mb-3"
                    x-ref="coords">{{ solve.solved_coords or 'Nicht ermittelt' }}</p>
 
@@ -94,7 +94,7 @@
 
                 <!-- Konfidenz-Badge -->
                 <div class="mt-4">
-                    <span class="text-sm text-gray-500">Konfidenz:</span>
+                    <span class="text-sm text-gray-400">Konfidenz:</span>
                     <span class="ml-2 px-3 py-1 rounded-full text-sm font-bold"
                           :class="{
                               'bg-green-500/20 text-green-400': {{ solve.confidence or 0 }} >= 70,
@@ -108,7 +108,7 @@
 
             <!-- Claude-Analyse -->
             <div class="glass rounded-xl p-6">
-                <h3 class="text-sm text-gray-500 mb-3">Claude-Analyse</h3>
+                <h3 class="text-sm text-gray-400 mb-3">Claude-Analyse</h3>
                 <div class="analysis text-sm leading-relaxed whitespace-pre-wrap break-words" x-ref="analysis">
                     {{ solve.claude_analysis | e }}
                 </div>
@@ -116,25 +116,25 @@
 
             {% if facts %}
             <div class="glass rounded-xl p-6">
-                <h3 class="text-sm text-gray-500 mb-3">Strukturierte Fakten</h3>
+                <h3 class="text-sm text-gray-400 mb-3">Strukturierte Fakten</h3>
                 <div class="space-y-4 text-sm text-gray-300">
                     {% if facts.puzzle_type %}
                     <div>
-                        <p class="text-gray-500 mb-1">Raetseltyp</p>
+                        <p class="text-gray-400 mb-1">Raetseltyp</p>
                         <p>{{ facts.puzzle_type }}</p>
                     </div>
                     {% endif %}
 
                     {% if facts.coordinate_prefix %}
                     <div>
-                        <p class="text-gray-500 mb-1">Koordinaten-Prefix</p>
+                        <p class="text-gray-400 mb-1">Koordinaten-Prefix</p>
                         <p class="font-mono">{{ facts.coordinate_prefix }}</p>
                     </div>
                     {% endif %}
 
                     {% if facts.referenced_numbers %}
                     <div>
-                        <p class="text-gray-500 mb-1">Relevante Zahlen</p>
+                        <p class="text-gray-400 mb-1">Relevante Zahlen</p>
                         <div class="flex flex-wrap gap-2">
                             {% for number in facts.referenced_numbers %}
                             <span class="px-2 py-1 rounded-md bg-white/5 font-mono">{{ number }}</span>
@@ -145,7 +145,7 @@
 
                     {% if facts.referenced_terms %}
                     <div>
-                        <p class="text-gray-500 mb-1">Relevante Begriffe</p>
+                        <p class="text-gray-400 mb-1">Relevante Begriffe</p>
                         <div class="flex flex-wrap gap-2">
                             {% for term in facts.referenced_terms %}
                             <span class="px-2 py-1 rounded-md bg-white/5">{{ term }}</span>
@@ -156,7 +156,7 @@
 
                     {% if facts.external_facts %}
                     <div>
-                        <p class="text-gray-500 mb-1">Externe Fakten</p>
+                        <p class="text-gray-400 mb-1">Externe Fakten</p>
                         <ul class="space-y-2 list-disc list-inside">
                             {% for item in facts.external_facts %}
                             <li>{{ item }}</li>
@@ -167,7 +167,7 @@
 
                     {% if facts.candidate_mappings %}
                     <div>
-                        <p class="text-gray-500 mb-1">Moegliche Zuordnungen</p>
+                        <p class="text-gray-400 mb-1">Moegliche Zuordnungen</p>
                         <ul class="space-y-2 list-disc list-inside">
                             {% for item in facts.candidate_mappings %}
                             <li>{{ item }}</li>
@@ -178,7 +178,7 @@
 
                     {% if facts.missing_links %}
                     <div>
-                        <p class="text-gray-500 mb-1">Noch offene Luecken</p>
+                        <p class="text-gray-400 mb-1">Noch offene Luecken</p>
                         <ul class="space-y-2 list-disc list-inside">
                             {% for item in facts.missing_links %}
                             <li>{{ item }}</li>
@@ -196,7 +196,7 @@
                 <div class="space-y-4 text-sm text-gray-300">
                     {% if structured_solution.used_facts %}
                     <div>
-                        <p class="text-gray-500 mb-1">Verwendete Fakten</p>
+                        <p class="text-gray-400 mb-1">Verwendete Fakten</p>
                         <ul class="space-y-2 list-disc list-inside">
                             {% for item in structured_solution.used_facts %}
                             <li>{{ item }}</li>
@@ -207,7 +207,7 @@
 
                     {% if structured_solution.reasoning_steps %}
                     <div>
-                        <p class="text-gray-500 mb-1">Schlussfolgerung</p>
+                        <p class="text-gray-400 mb-1">Schlussfolgerung</p>
                         <ol class="space-y-2 list-decimal list-inside">
                             {% for item in structured_solution.reasoning_steps %}
                             <li>{{ item }}</li>
@@ -218,7 +218,7 @@
 
                     {% if structured_solution.candidate_coordinate_logic %}
                     <div>
-                        <p class="text-gray-500 mb-1">Moegliche Koordinatenlogik</p>
+                        <p class="text-gray-400 mb-1">Moegliche Koordinatenlogik</p>
                         <ul class="space-y-2 list-disc list-inside">
                             {% for item in structured_solution.candidate_coordinate_logic %}
                             <li>{{ item }}</li>
@@ -229,7 +229,7 @@
 
                     {% if structured_solution.why_not_solved %}
                     <div>
-                        <p class="text-gray-500 mb-1">Warum nicht geloest</p>
+                        <p class="text-gray-400 mb-1">Warum nicht geloest</p>
                         <p>{{ structured_solution.why_not_solved }}</p>
                     </div>
                     {% endif %}
@@ -239,11 +239,11 @@
 
             {% if variable_resolution %}
             <div class="glass rounded-xl p-6">
-                <h3 class="text-sm text-gray-500 mb-3">Aufgeloeste Variablen</h3>
+                <h3 class="text-sm text-gray-400 mb-3">Aufgeloeste Variablen</h3>
                 <div class="space-y-4 text-sm text-gray-300">
                     {% if variable_resolution.resolved_variables %}
                     <div>
-                        <p class="text-gray-500 mb-1">Werte</p>
+                        <p class="text-gray-400 mb-1">Werte</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {% for key, value in variable_resolution.resolved_variables.items() %}
                             <div class="rounded-lg bg-white/5 px-3 py-2 font-mono">{{ key }} = {{ value }}</div>
@@ -254,7 +254,7 @@
 
                     {% if variable_resolution.evidence %}
                     <div>
-                        <p class="text-gray-500 mb-1">Belege</p>
+                        <p class="text-gray-400 mb-1">Belege</p>
                         <ul class="space-y-2 list-disc list-inside">
                             {% for key, value in variable_resolution.evidence.items() %}
                             <li><span class="font-mono">{{ key }}</span>: {{ value }}</li>
@@ -265,7 +265,7 @@
 
                     {% if variable_resolution.resolution_steps %}
                     <div>
-                        <p class="text-gray-500 mb-1">Herleitung</p>
+                        <p class="text-gray-400 mb-1">Herleitung</p>
                         <ol class="space-y-2 list-decimal list-inside">
                             {% for item in variable_resolution.resolution_steps %}
                             <li>{{ item }}</li>
@@ -276,7 +276,7 @@
 
                     {% if variable_resolution.unresolved_variables %}
                     <div>
-                        <p class="text-gray-500 mb-1">Noch offen</p>
+                        <p class="text-gray-400 mb-1">Noch offen</p>
                         <ul class="space-y-2 list-disc list-inside">
                             {% for item in variable_resolution.unresolved_variables %}
                             <li>{{ item }}</li>
@@ -285,12 +285,12 @@
                     </div>
 
                     <div class="pt-2 border-t border-white/10">
-                        <p class="text-gray-500 mb-2">Manuell weiterrechnen</p>
+                        <p class="text-gray-400 mb-2">Manuell weiterrechnen</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {% for item in variable_resolution.unresolved_variables %}
                             {% set variable_name = item.split(':', 1)[0].strip() if ':' in item else item.strip().split(' ', 1)[0] %}
                             <label class="block">
-                                <span class="block text-xs text-gray-500 mb-1 font-mono">{{ variable_name }}</span>
+                                <span class="block text-xs text-gray-400 mb-1 font-mono">{{ variable_name }}</span>
                                 <input type="text"
                                        class="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-gold-400"
                                        x-model="manualOverrides['{{ variable_name }}']"
@@ -315,7 +315,7 @@
                 <h3 class="text-sm text-gold-400 mb-3">Externe Quelle</h3>
                 <div class="space-y-3 text-sm text-gray-300">
                     <div>
-                        <p class="text-gray-500 mb-1">Quelle</p>
+                        <p class="text-gray-400 mb-1">Quelle</p>
                         <a href="{{ solve.research_url }}" target="_blank" rel="noopener noreferrer"
                            class="text-gold-400 hover:underline break-all">
                             {{ solve.research_summary or solve.research_url }}
@@ -323,13 +323,13 @@
                     </div>
                     {% if solve.research_source_type %}
                     <div>
-                        <p class="text-gray-500 mb-1">Typ</p>
+                        <p class="text-gray-400 mb-1">Typ</p>
                         <p>{{ solve.research_source_type }}</p>
                     </div>
                     {% endif %}
                     {% if solve.research_excerpt %}
                     <div>
-                        <p class="text-gray-500 mb-1">Verwendeter Kontext</p>
+                        <p class="text-gray-400 mb-1">Verwendeter Kontext</p>
                         <div class="whitespace-pre-wrap break-words text-gray-300">{{ solve.research_excerpt[:1200] }}</div>
                     </div>
                     {% endif %}
@@ -353,7 +353,7 @@
                     </span>
                 </button>
                 <a href="/" class="flex-1 glass-strong rounded-xl px-4 py-3 text-sm font-medium
-                                   text-gray-400 hover:bg-white/10 transition-colors text-center">
+                                   text-gray-300 hover:bg-white/10 transition-colors text-center">
                     Neues Raetsel
                 </a>
             </div>
@@ -362,9 +362,11 @@
 
     <!-- Lightbox -->
     <div x-show="lightbox" x-cloak
+         role="dialog" aria-modal="true" aria-label="Bildvorschau"
          @click="lightbox = null"
+         @keydown.escape.window="lightbox = null"
          class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 cursor-pointer">
-        <img :src="lightbox" class="max-w-full max-h-full rounded-lg shadow-2xl">
+        <img :src="lightbox" class="max-w-full max-h-full rounded-lg shadow-2xl" alt="Vergroessertes Raetselbild">
     </div>
 </div>
 

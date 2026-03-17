@@ -86,22 +86,35 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(200, 170, 110, 0.3); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(200, 170, 110, 0.5); }
+
+        /* Accessibility */
+        a:focus-visible,.btn-gold:focus-visible{outline:2px solid #c8aa6e;outline-offset:2px;border-radius:8px}
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body class="font-inter">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:bg-gold-400 focus:text-dark focus:p-2 focus:rounded focus:z-[60]">Zum Inhalt springen</a>
     <!-- Navigation -->
-    <nav class="glass sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+    <nav class="glass sticky top-0 z-50 px-6 py-3 flex items-center justify-between" aria-label="Hauptnavigation">
         <a href="/" class="flex items-center gap-3 group">
             <span class="text-2xl">&#127759;</span>
             <span class="text-gold-400 font-bold text-lg gold-glow">GC Solver</span>
         </a>
         <div class="flex items-center gap-4">
-            <a href="/" class="text-sm text-gray-400 hover:text-gold-400 transition-colors">Neues Raetsel</a>
-            <a href="/history" class="text-sm text-gray-400 hover:text-gold-400 transition-colors">History</a>
+            <a href="/" class="text-sm text-gray-300 hover:text-gold-400 transition-colors">Neues Raetsel</a>
+            <a href="/history" class="text-sm text-gray-300 hover:text-gold-400 transition-colors">History</a>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main id="main-content" class="max-w-7xl mx-auto px-4 py-8">
         {% block content %}{% endblock %}
     </main>
 

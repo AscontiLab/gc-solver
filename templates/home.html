@@ -6,7 +6,7 @@
     <div class="text-center mb-10 fade-in">
         <div class="text-6xl mb-4">&#127759;</div>
         <h1 class="text-4xl font-extrabold text-gold-400 gold-glow mb-2">GC Solver</h1>
-        <p class="text-gray-400 text-lg">Mystery-Cache Raetsel automatisch analysieren</p>
+        <p class="text-gray-300 text-lg">Mystery-Cache Raetsel automatisch analysieren</p>
     </div>
 
     {% if error %}
@@ -20,7 +20,7 @@
           @submit="if(gcCode.trim()) loading = true"
           class="w-full max-w-md slide-up">
         <div class="glass-strong rounded-2xl p-8">
-            <label class="block text-sm text-gray-400 mb-2 font-medium">GC-Code eingeben</label>
+            <label class="block text-sm text-gray-300 mb-2 font-medium">GC-Code eingeben</label>
             <div class="flex gap-3">
                 <input type="text" name="gc_code"
                        x-model="gcCode"
@@ -44,7 +44,7 @@
                     </span>
                 </button>
             </div>
-            <p class="text-xs text-gray-500 mt-3">Beispiel: GC9ABCD — Scraping + Claude-Analyse dauert ~15-30 Sekunden</p>
+            <p class="text-xs text-gray-400 mt-3">Beispiel: GC9ABCD — Scraping + Claude-Analyse dauert ~15-30 Sekunden</p>
         </div>
     </form>
 
@@ -52,15 +52,15 @@
     <div class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl w-full fade-in" style="animation-delay: 0.3s;">
         <div class="glass rounded-xl p-4 text-center">
             <div class="text-2xl mb-2">&#128270;</div>
-            <p class="text-sm text-gray-400">Scrapet das Listing automatisch</p>
+            <p class="text-sm text-gray-300">Scrapet das Listing automatisch</p>
         </div>
         <div class="glass rounded-xl p-4 text-center">
             <div class="text-2xl mb-2">&#129302;</div>
-            <p class="text-sm text-gray-400">Claude Vision analysiert Text + Bilder</p>
+            <p class="text-sm text-gray-300">Claude Vision analysiert Text + Bilder</p>
         </div>
         <div class="glass rounded-xl p-4 text-center">
             <div class="text-2xl mb-2">&#128205;</div>
-            <p class="text-sm text-gray-400">Koordinaten-Vorschlag mit Konfidenz</p>
+            <p class="text-sm text-gray-300">Koordinaten-Vorschlag mit Konfidenz</p>
         </div>
     </div>
 </div>
