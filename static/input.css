@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  --font-inter: 'Inter', sans-serif;
+  --color-dark: #08080f;
+  --color-gold-400: #c8aa6e;
+  --color-gold-500: #b8963e;
+  --color-gold-600: #a8862e;
+  --color-glass: rgba(255,255,255,0.06);
+}

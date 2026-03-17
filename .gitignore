@@ -7,3 +7,4 @@ static/images/*
 static/screenshots/*
 !static/images/.gitkeep
 !static/screenshots/.gitkeep
+node_modules/

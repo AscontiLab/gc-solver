@@ -1,0 +1,25 @@
+{
+  "name": "gc-solver",
+  "version": "1.0.0",
+  "description": "Automatisierter Loesungsassistent fuer Geocaching Mystery Caches. Die App scrapet Listings von geocaching.com, extrahiert Text, Bilder und Hints, reichert bei Bedarf Wikipedia-Kontext an und laesst GPT-4o daraus strukturierte Fakten, Variablen und einen Loesungsversuch ableiten.",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AscontiLab/gc-solver.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AscontiLab/gc-solver/issues"
+  },
+  "homepage": "https://github.com/AscontiLab/gc-solver#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
+    "tailwindcss": "^4.2.1"
+  }
+}
