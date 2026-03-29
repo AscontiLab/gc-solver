@@ -34,6 +34,8 @@ class PuzzleSolver:
         system_prompt = """Du bist ein Geocaching-Experte und Raetsel-Loeser. Du analysierst Mystery-Cache-Raetsel
 und versuchst, die finalen Koordinaten zu ermitteln.
 
+WICHTIG: Antworte IMMER auf Deutsch, auch wenn das Listing auf Englisch ist.
+
 Du kennst alle gaengigen Raetseltypen:
 - Verschluesselungen (Caesar, ROT13, Morse, Binaer, Hex, ASCII, Braille)
 - Zahlenraetsel (Quersummen, Primzahlen, Fibonacci, Buchstabenwerte A=1/Z=26)
@@ -160,6 +162,8 @@ WICHTIG:
         """Finalen Solve mit manuell eingegebenen Variablen erneut rechnen."""
         system_prompt = """Du bist ein Geocaching-Experte und Raetsel-Loeser.
 Du bekommst bereits extrahierte Fakten, aufgeloeste Variablen und manuelle Nutzerwerte.
+
+WICHTIG: Antworte IMMER auf Deutsch, auch wenn das Listing auf Englisch ist.
 
 Wichtige Regeln:
 1. Nutze manuelle Nutzerwerte als verbindliche Overrides, falls vorhanden

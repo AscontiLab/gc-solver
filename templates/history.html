@@ -20,8 +20,8 @@
                 {% for s in solves %}
                 <tr class="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
                     tabindex="0" role="link" aria-label="{{ s.gc_code }} — {{ s.cache_name or 'Unbenannt' }}"
-                    onclick="location.href='/solve/{{ s.gc_code }}'"
-                    onkeydown="if(event.key==='Enter')location.href='/solve/{{ s.gc_code }}'"
+                    onclick="location.href='solve/{{ s.gc_code }}'"
+                    onkeydown="if(event.key==='Enter')location.href='solve/{{ s.gc_code }}'"
                     <td class="px-4 py-3 font-mono text-gold-400">{{ s.gc_code }}</td>
                     <td class="px-4 py-3 text-gray-300">{{ s.cache_name or '-' }}</td>
                     <td class="px-4 py-3 text-gray-300 hidden sm:table-cell">
@@ -56,7 +56,7 @@
     <div class="glass rounded-xl p-12 text-center">
         <div class="text-4xl mb-4">&#128270;</div>
         <p class="text-gray-300">Noch keine Raetsel analysiert.</p>
-        <a href="/" class="btn-gold rounded-xl px-6 py-3 inline-block mt-4">Erstes Raetsel loesen</a>
+        <a href="./" class="btn-gold rounded-xl px-6 py-3 inline-block mt-4">Erstes Raetsel loesen</a>
     </div>
     {% endif %}
 </div>

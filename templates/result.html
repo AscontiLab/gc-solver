@@ -65,9 +65,9 @@
                 <h3 class="text-sm text-gray-400 mb-2">Raetsel-Bilder</h3>
                 <div class="grid grid-cols-2 gap-2">
                     {% for img in images %}
-                    <img src="/{{ img }}" alt="Raetselbild"
+                    <img src="{{ img }}" alt="Raetselbild"
                          class="rounded-lg cursor-pointer hover:opacity-80 transition-opacity w-full"
-                         @click="lightbox = '/{{ img }}'">
+                         @click="lightbox = '{{ img }}'">
                     {% endfor %}
                 </div>
             </div>
@@ -77,9 +77,9 @@
             {% if solve.screenshot_path %}
             <div class="glass rounded-xl p-4">
                 <h3 class="text-sm text-gray-400 mb-2">Screenshot</h3>
-                <img src="/{{ solve.screenshot_path }}" alt="Screenshot"
+                <img src="{{ solve.screenshot_path }}" alt="Screenshot"
                      class="rounded-lg w-full cursor-pointer hover:opacity-80 transition-opacity"
-                     @click="lightbox = '/{{ solve.screenshot_path }}'">
+                     @click="lightbox = '{{ solve.screenshot_path }}'">
             </div>
             {% endif %}
         </div>
@@ -361,7 +361,7 @@
                         Claude denkt...
                     </span>
                 </button>
-                <a href="/" class="flex-1 glass-strong rounded-xl px-4 py-3 text-sm font-medium
+                <a href="./" class="flex-1 glass-strong rounded-xl px-4 py-3 text-sm font-medium
                                    text-gray-300 hover:bg-white/10 transition-colors text-center">
                     Neues Raetsel
                 </a>
@@ -423,7 +423,7 @@ function resultPage() {
         async retry() {
             this.retrying = true;
             try {
-                const resp = await fetch('/api/retry/{{ solve.id }}', { method: 'POST' });
+                const resp = await fetch('api/retry/{{ solve.id }}', { method: 'POST' });
                 const data = await resp.json();
                 if (data.error) {
                     this.showToast('Fehler: ' + data.error, 'error');
@@ -441,7 +441,7 @@ function resultPage() {
         async manualResolve() {
             this.manualResolving = true;
             try {
-                const resp = await fetch('/api/manual-resolve/{{ solve.id }}', {
+                const resp = await fetch('api/manual-resolve/{{ solve.id }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.manualOverrides),

@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% set base_prefix = config.BASE_PREFIX|default('') %}
+    {% if base_prefix %}<base href="{{ base_prefix }}/">{% endif %}
     <title>GC Solver</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{% if not base_prefix %}/{% endif %}static/style.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -96,13 +98,13 @@
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:bg-gold-400 focus:text-dark focus:p-2 focus:rounded focus:z-[60]">Zum Inhalt springen</a>
     <!-- Navigation -->
     <nav class="glass sticky top-0 z-50 px-6 py-3 flex items-center justify-between" aria-label="Hauptnavigation">
-        <a href="/" class="flex items-center gap-3 group">
+        <a href="./" class="flex items-center gap-3 group">
             <span class="text-2xl">&#127759;</span>
             <span class="text-gold-400 font-bold text-lg gold-glow">GC Solver</span>
         </a>
         <div class="flex items-center gap-4">
-            <a href="/" class="text-sm text-gray-300 hover:text-gold-400 transition-colors">Neues Raetsel</a>
-            <a href="/history" class="text-sm text-gray-300 hover:text-gold-400 transition-colors">History</a>
+            <a href="./" class="text-sm text-gray-300 hover:text-gold-400 transition-colors">Neues Raetsel</a>
+            <a href="history" class="text-sm text-gray-300 hover:text-gold-400 transition-colors">History</a>
         </div>
     </nav>
 
