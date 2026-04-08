@@ -66,6 +66,12 @@ sudo systemctl enable --now gc-solver
 | `/api/manual-resolve/{id}` | POST | Mit manuell eingegebenen Variablen weiterrechnen |
 | `/history` | GET | Letzte Loesungen anzeigen |
 
+## Auth
+
+- `ADMIN_TOKEN` Env-Variable erforderlich fuer `/api/solve`, `/api/retry`, `/api/manual-resolve`
+- Ohne `ADMIN_TOKEN` liefern diese Endpoints `503`
+- In `.env` setzen: `ADMIN_TOKEN=<token>`
+
 ## Wichtige Grenzen
 
 - Externe Recherche ist aktuell bewusst eng gehalten und auf klare Wikipedia-Hinweise fokussiert.
