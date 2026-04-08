@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     GC_PASSWORD: str = ""
     PLAYWRIGHT_HEADLESS: bool = True
     RATE_LIMIT_SECONDS: float = 5.0
+    ADMIN_TOKEN: str = ""
 
     model_config = {"env_file": ".env"}
 

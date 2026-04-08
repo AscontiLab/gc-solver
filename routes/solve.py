@@ -2,12 +2,13 @@ import json
 import logging
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Header, HTTPException, Request, Depends, Form
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from config import settings
 from database import get_db
 from models import PuzzleSolve
 from scraper import gc_session
@@ -18,6 +19,17 @@ templates = Jinja2Templates(directory="templates")
 logger = logging.getLogger(__name__)
 
 CACHE_HOURS = 24
+
+
+def _require_admin_token(authorization: str | None = Header(None)) -> None:
+    """Prueft den Admin-Token fuer kostenverursachende Endpoints."""
+    if not settings.ADMIN_TOKEN:
+        raise HTTPException(status_code=503, detail="ADMIN_TOKEN nicht konfiguriert")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization-Header fehlt")
+    token = authorization.removeprefix("Bearer ").strip()
+    if token != settings.ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Ungueltiger Token")
 
 
 def _parse_json_blob(value: str | None) -> dict:
@@ -57,6 +69,7 @@ async def solve_cache(
     request: Request,
     gc_code: str = Form(...),
     db: Session = Depends(get_db),
+    _auth: None = Depends(_require_admin_token),
 ):
     gc_code = gc_code.strip().upper()
 
@@ -160,7 +173,7 @@ async def view_solve(request: Request, gc_code: str, db: Session = Depends(get_d
 
 
 @router.post("/api/retry/{solve_id}", response_class=JSONResponse)
-async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
+async def retry_solve(solve_id: int, db: Session = Depends(get_db), _auth: None = Depends(_require_admin_token)):
     solve = db.get(PuzzleSolve, solve_id)
     if not solve:
         return JSONResponse({"error": "Nicht gefunden"}, status_code=404)
@@ -206,7 +219,7 @@ async def retry_solve(solve_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/api/manual-resolve/{solve_id}", response_class=JSONResponse)
-async def manual_resolve(solve_id: int, request: Request, db: Session = Depends(get_db)):
+async def manual_resolve(solve_id: int, request: Request, db: Session = Depends(get_db), _auth: None = Depends(_require_admin_token)):
     solve = db.get(PuzzleSolve, solve_id)
     if not solve:
         return JSONResponse({"error": "Nicht gefunden"}, status_code=404)
